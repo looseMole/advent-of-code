@@ -85,6 +85,7 @@ func parseListsToSlices(inputFileLocation string) ([]int, []int) {
 }
 
 func DayOne() {
+	fmt.Println("----- Day One -----")
 	inputNumbersLeft, inputNumbersRight := parseListsToSlices("dayOne/input.txt")
 
 	// Calculate difference between every pair of numbers
@@ -121,5 +122,6 @@ func DayOne() {
 		similarityScore += count * inputNumbersLeft[i]
 	}
 
-	fmt.Printf("Similarity score: %v\n", similarityScore)
+	fmt.Printf("Similarity score: %v\n\n", similarityScore)
+}
 }
