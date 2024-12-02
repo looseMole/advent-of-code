@@ -39,6 +39,7 @@ func main() {
 
 	// Run the dayOne function
 	DayOne()
+	DayTwo()
 }
 
 func parseListsToSlices(inputFileLocation string) ([]int, []int) {
@@ -84,6 +85,110 @@ func parseListsToSlices(inputFileLocation string) ([]int, []int) {
 	return inputNumbersLeft, inputNumbersRight
 }
 
+func parseFileToSlicesOfIntegers(inputFileLocation string) [][]int {
+	var sliceOfLines = make([][]int, 0, 1000)
+
+	// Open the file
+	file, err := os.Open(inputFileLocation)
+
+	if err != nil {
+		fmt.Printf("Error opening file: %v\n", err)
+		panic(err)
+	}
+	defer file.Close() // Close the file when done
+
+	// Create a scanner, to read the file line by line
+	scanner := bufio.NewScanner(file)
+
+	for scanner.Scan() {
+		line := scanner.Text()
+
+		// Split the line by whitespace
+		numberStrings := strings.Fields(line)
+		var numberSlice []int
+
+		for columnNo := 0; columnNo < len(numberStrings); columnNo++ {
+			// Convert the string to integer
+			number, err := strconv.Atoi(numberStrings[columnNo])
+			if err != nil {
+				fmt.Printf("Error converting string to integer: %v\n", err)
+				panic(err)
+			}
+
+			numberSlice = append(numberSlice, number)
+
+		}
+
+		sliceOfLines = append(sliceOfLines, numberSlice)
+	}
+
+	return sliceOfLines
+}
+
+func intReportSliceIsSafe(intSlice []int, allowedUnsafeLevelsPerReport int) bool {
+	if allowedUnsafeLevelsPerReport < 0 {
+		return false
+	}
+
+	// Find trend
+	positiveDiffCount := 0
+	negativeDiffCount := 0
+
+	for i := 1; i < len(intSlice); i++ {
+		diff := intSlice[i] - intSlice[i-1]
+
+		if diff < 0 {
+			negativeDiffCount++
+		} else if diff > 0 {
+			positiveDiffCount++
+		}
+	}
+
+	var ascending bool = positiveDiffCount > negativeDiffCount
+	unsafeLevelCount := 0
+
+	for i := 1; i < len(intSlice); i++ {
+		diff := intSlice[i] - intSlice[i-1]
+
+		// If any two adjacent numbers are the same, the slope is flat = Strictly speaking no trend.
+		// The greatest allowed difference between any two adjacent numbers, is 3.
+		if diff == 0 || diff > 3 || diff < -3 {
+			unsafeLevelCount++
+		}
+
+		// If the trend is not kept
+		if ascending && diff < 0 {
+			unsafeLevelCount++
+		} else if !ascending && diff > 0 {
+			unsafeLevelCount++
+		}
+	}
+
+	if unsafeLevelCount == 0 {
+		return true
+	}
+
+	if allowedUnsafeLevelsPerReport > 0 {
+		// For each level x, try this same function with said level removed.
+		for x := 0; x < len(intSlice); x++ {
+			var smallerIntSlice []int
+
+			if len(intSlice) >= x+2 {
+				smallerIntSlice = append(smallerIntSlice, intSlice[:x]...)
+				smallerIntSlice = append(smallerIntSlice, intSlice[x+1:]...)
+			} else {
+				smallerIntSlice = intSlice[:x]
+			}
+
+			if intReportSliceIsSafe(smallerIntSlice, allowedUnsafeLevelsPerReport-1) {
+				return true
+			}
+		}
+	}
+
+	return false
+}
+
 func DayOne() {
 	fmt.Println("----- Day One -----")
 	inputNumbersLeft, inputNumbersRight := parseListsToSlices("dayOne/input.txt")
@@ -124,4 +229,22 @@ func DayOne() {
 
 	fmt.Printf("Similarity score: %v\n\n", similarityScore)
 }
+
+func DayTwo() {
+	fmt.Println("----- Day Two -----")
+	var sliceOfLinesOfIntegers [][]int = parseFileToSlicesOfIntegers("dayTwo/input.txt")
+
+	countOfSafeReports := 0
+	countOfSafeReportsWithDampener := 0
+	for i := 0; i < len(sliceOfLinesOfIntegers); i++ {
+		if intReportSliceIsSafe(sliceOfLinesOfIntegers[i], 0) {
+			countOfSafeReports++
+			countOfSafeReportsWithDampener++
+		} else if intReportSliceIsSafe(sliceOfLinesOfIntegers[i], 1) {
+			countOfSafeReportsWithDampener++
+		}
+	}
+
+	fmt.Printf("Amount of safe reports without dampener: %v\n", countOfSafeReports)
+	fmt.Printf("Amount of safe reports with dampener: %v\n\n", countOfSafeReportsWithDampener)
 }
