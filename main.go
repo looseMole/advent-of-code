@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"regexp"
 	"sort"
 	"strconv"
 	"strings"
@@ -40,6 +41,7 @@ func main() {
 	// Run the dayOne function
 	DayOne()
 	DayTwo()
+	DayThree()
 }
 
 func parseListsToSlices(inputFileLocation string) ([]int, []int) {
@@ -247,4 +249,58 @@ func DayTwo() {
 
 	fmt.Printf("Amount of safe reports without dampener: %v\n", countOfSafeReports)
 	fmt.Printf("Amount of safe reports with dampener: %v\n\n", countOfSafeReportsWithDampener)
+}
+
+func parseFileToString(inputFileLocation string) string {
+	// Open the file
+	file, err := os.Open(inputFileLocation)
+
+	if err != nil {
+		fmt.Printf("Error opening file: %v\n", err)
+		panic(err)
+	}
+	defer file.Close() // Close the file when done
+
+	var fileString string
+
+	// Create a scanner, to read the file line by line
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		line := scanner.Text()
+
+		fileString += line
+	}
+
+	return fileString
+}
+
+func DayThree() {
+	fmt.Println("----- Day Three -----")
+
+	fileString := parseFileToString("dayThree/input.txt")
+
+	exp, _ := regexp.Compile("mul\\((\\d{1,3}),(\\d{1,3})\\)")
+	// Int parameter = -1, because if positive, returns up to that many slices of the result.
+	matches := exp.FindAllStringSubmatch(fileString, -1)
+
+	sumOfMultiplications := 0
+
+	for i := 0; i < len(matches); i++ {
+		integerOne, err := strconv.Atoi(matches[i][1])
+		if err != nil {
+			fmt.Printf("Error converting string to integer: %v\n", err)
+			panic(err)
+		}
+
+		integerTwo, err := strconv.Atoi(matches[i][2])
+		if err != nil {
+			fmt.Printf("Error converting string to integer: %v\n", err)
+			panic(err)
+		}
+
+		sumOfMultiplications += integerOne * integerTwo
+	}
+
+	fmt.Printf("Counted: %v instances of the mul(int, int) command, in file).\n", len(matches))
+	fmt.Printf("The sum of the correctly-formed multiplications should be: %v.\n", sumOfMultiplications)
 }
