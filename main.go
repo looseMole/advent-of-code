@@ -279,13 +279,25 @@ func DayThree() {
 
 	fileString := parseFileToString("dayThree/input.txt")
 
-	exp, _ := regexp.Compile("mul\\((\\d{1,3}),(\\d{1,3})\\)")
+	exp, _ := regexp.Compile("mul\\((\\d{1,3}),(\\d{1,3})\\)|do\\(\\)|don't\\(\\)")
 	// Int parameter = -1, because if positive, returns up to that many slices of the result.
 	matches := exp.FindAllStringSubmatch(fileString, -1)
 
 	sumOfMultiplications := 0
+	sumOfAllowedMultiplications := 0
+	allowed := true
 
 	for i := 0; i < len(matches); i++ {
+		if len(matches[i][0]) <= 7 {
+			if matches[i][0] == "don't()" {
+				allowed = false
+			} else {
+				allowed = true
+			}
+
+			continue // The contents of matches[i] is too short for the following, and cannot be parsed to integers.
+		}
+
 		integerOne, err := strconv.Atoi(matches[i][1])
 		if err != nil {
 			fmt.Printf("Error converting string to integer: %v\n", err)
@@ -298,9 +310,16 @@ func DayThree() {
 			panic(err)
 		}
 
-		sumOfMultiplications += integerOne * integerTwo
+		product := integerOne * integerTwo
+
+		if allowed {
+			sumOfAllowedMultiplications += product
+		}
+
+		sumOfMultiplications += product
 	}
 
 	fmt.Printf("Counted: %v instances of the mul(int, int) command, in file).\n", len(matches))
 	fmt.Printf("The sum of the correctly-formed multiplications should be: %v.\n", sumOfMultiplications)
+	fmt.Printf("The sum of the correctly-formed, allowed multiplications should be: %v.\n\n", sumOfAllowedMultiplications)
 }
